@@ -15,7 +15,7 @@ Example Use:
         (Congrats! Examine that for information about item difficulty!)
 
     To run an adaptive test with your test items:
-    ./run_adaptive_test.py -i a1_time.json
+    ./run_adaptive_test.py -d a1_time.json
     This will open an interactive session where the test will ask you questions
     according to whatever will cause the model to gain the most information to
     predict your abilities.
