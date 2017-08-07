@@ -10,7 +10,7 @@ questions are being answered correctly or incorrectly.
 
 Example Use:
     with a file called my_data.csv call
-    ./start_mirt_pipeline -i path/to/my_data.csv
+    ./start_mirt_pipeline.py -i path/to/my_data.csv
     let a1_time.json be the name of the output json file
         (Congrats! Examine that for information about item difficulty!)
 
