@@ -103,7 +103,7 @@ def get_cmd_line_options(arguments=None):
                             "and 1.0) of the data to be used for training. "
                             "The remainder is held out for testing."))
     parser.add_option("-e", "--emit_features", action="store_true",
-                      default=False,
+                      default=True,
                       help=("Boolean flag indicating whether to output "
                             "feature and prediction data. Often used to "
                             "analyze accuracy of predictions after model "
@@ -127,27 +127,32 @@ def get_cmd_line_options(arguments=None):
 
     return options
 
-
-def emit_features(user_states, theta, options, split_desc):
-    """Emit a CSV data file of correctness, prediction, and abilities."""
+# EDITS
+def emit_features(user_states, theta, options, split_desc, exercise_ind_dict=None):
+    """Emit a CSV data file of user, exercise, correctness, prediction, and abilities."""
+    reverse_dict = {v: k for k, v in exercise_ind_dict.iteritems()}
     f = open("%s_split=%s.csv" % (options.output, split_desc), 'w+')
     for user_state in user_states:
         # initialize
         abilities = np.zeros((options.num_abilities, 1))
-        correct = user_state['correct']
-        log_time_taken = user_state['log_time_taken']
-        exercise_ind = user_state['exercise_ind']
+        # EDITS
+        correct = user_state.correct
+        log_time_taken = user_state.log_time_taken
+        exercise_ind = user_state.exercise_ind
+        user = user_state.user
 
-        # NOTE: I currently do not output features for the first problem
-        for i in xrange(1, correct.size):
+        # EDIT
+        for i in xrange(0, correct.size):
 
             # TODO(jace) this should probably be the marginal estimation
+            # EDITS
             _, _, abilities, _ = mirt_util.sample_abilities_diffusion(
-                theta, exercise_ind[:i], correct[:i], log_time_taken[:i],
-                abilities_init=abilities, num_steps=200)
+                theta, exercise_ind[:i], correct[:i], log_time_taken[:i]
+                , abilities_init=abilities, num_steps=200)
             prediction = mirt_util.conditional_probability_correct(
                 abilities, theta, exercise_ind[i:(i + 1)])
-
+            f.write("%s, " % user[i])
+            f.write("%s, " % reverse_dict[exercise_ind[i]])
             f.write("%d, " % correct[i])
             f.write("%.4f, " % prediction[-1])
             f.write(",".join(["%.4f" % a for a in abilities]))
@@ -254,7 +259,7 @@ def run(options):
             emit_features(user_states_test, model.theta, options, "test")
             emit_features(user_states_train, model.theta, options, "train")
         else:
-            emit_features(user_states, model.theta, options, "full")
+            emit_features(user_states, model.theta, options, "full", exercise_ind_dict)
 
 
 if __name__ == '__main__':
