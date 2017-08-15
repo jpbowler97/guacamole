@@ -96,13 +96,11 @@ class UserState(object):
         self.log_time_taken = None
         self.abilities = None
         self.exercise_ind = None
+        self.user_id = None
 
-    def add_data(self, lines, exercise_ind_dict, args):
-        """Add provided by user to the object
-
-        TODO(eliana): Don't send in 'args' as an argument. That's terrible.
-        """
-        idx_pl = get_indexer(args)
+    def add_data(self, lines, exercise_ind_dict, options):
+        """Add provided by user to the object"""
+        idx_pl = get_indexer(options)
         self.correct = np.asarray([line[idx_pl.correct] for line in lines]
                                   ).astype(int)
 
@@ -111,17 +109,20 @@ class UserState(object):
             [line[idx_pl.time_taken] for line in lines]).astype(int))
 
         self.exercises = [line[idx_pl.exercise] for line in lines]
+        self.user = [line[idx_pl.user] for line in lines]
         self.exercise_ind = [exercise_ind_dict[ex] for ex in self.exercises]
         self.exercise_ind = np.array(self.exercise_ind)
-        self.abilities = np.random.randn(args.num_abilities, 1)
+        self.abilities = np.random.randn(options.num_abilities, 1)
 
         # Cut out any duplicate exercises in the training data for a single
         # user NOTE: if you allow duplicates, you need to change the way the
         # gradient is computed as well.
-        _, idx = np.unique(self.exercise_ind, return_index=True)
-        self.exercise_ind = self.exercise_ind[idx]
-        self.correct = self.correct[idx]
-        self.log_time_taken = self.log_time_taken[idx]
+
+        # Edit
+        # _, idx = np.unique(self.exercise_ind, return_index=True)
+        # self.exercise_ind = self.exercise_ind[idx]
+        # self.correct = self.correct[idx]
+        # self.log_time_taken = self.log_time_taken[idx]
 
 
 def get_indexer(options):
@@ -185,6 +186,7 @@ def conditional_probability_correct(abilities, ex_parameters, exercise_ind):
     difficulties = ex_parameters.W_correct[exercise_ind, :]
     Z = sigmoid(np.dot(difficulties, abilities))
     Z = np.reshape(Z, Z.size)  # flatten to 1-d ndarray
+
     return Z
 
 
@@ -255,22 +257,32 @@ def sample_abilities_diffusion_wrapper(args):
     # make sure each student gets a different random sequence
     id = multiprocessing.current_process()._identity
     if len(id) > 0:
-        np.random.seed([id[0], time.time() * 1e9])
+        np.random.seed([id[0], int(time.time() * 1e9) % 4294967296])
     else:
-        np.random.seed([time.time() * 1e9])
+        np.random.seed([int(time.time() * 1e9) % 4294967296])
 
     num_steps = options.sampling_num_steps
 
     abilities, Eabilities, _, _ = sample_abilities_diffusion(
-        theta, state, num_steps=num_steps)
+        theta, state.exercise_ind, state.correct, state.log_time_taken, num_steps=num_steps)
 
     # TODO(jascha/eliana) returning mean abilities may lead to bias.
     # (eg, may push weights to be too large)  Investigate this
     return abilities, Eabilities, user_index
 
+        
+# def sample_abilities_diffusion(theta, state, num_steps=200,
+#                                sampling_epsilon=.5):
+#     exercise_ind = state.exercise_ind
+#     correct = state.correct
+#     log_time_taken = state.log_time_taken
 
-def sample_abilities_diffusion(theta, state, num_steps=200,
-                               sampling_epsilon=.5):
+#     return(sample_abilities_diffusion(theta, exercise_ind, correct, log_time_taken
+#         , num_steps=num_steps, sampling_epsilon=sampling_epsilon))
+
+# EDITS
+def sample_abilities_diffusion(theta, exercise_ind, correct, log_time_taken
+    , abilities_init=None, num_steps=200, sampling_epsilon=.5):
     """Sample the ability vector for this user from the posterior over user
     ability conditioned on the observed exercise performance. Use
     Metropolis-Hastings with Gaussian proposal distribution.
@@ -306,10 +318,12 @@ def sample_abilities_diffusion(theta, state, num_steps=200,
         4: The standard deviation of the abilities vectors in the entire chain.
     """
 
-    abilities_init = state.abilities
-    correct = state.correct
-    log_time_taken = state.log_time_taken
-    exercise_ind = state.exercise_ind
+    # EDITS
+    # abilities_init = state.abilities
+    # correct = state.correct
+    # log_time_taken = state.log_time_taken
+    # exercise_ind = state.exercise_ind
+
     # TODO -- this would run faster with something like an HMC sampler
     # initialize abilities using prior
     if abilities_init is None:
