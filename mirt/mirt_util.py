@@ -100,6 +100,7 @@ class UserState(object):
 
     def add_data(self, lines, exercise_ind_dict, options):
         """Add provided by user to the object"""
+        
         idx_pl = get_indexer(options)
         self.correct = np.asarray([line[idx_pl.correct] for line in lines]
                                   ).astype(int)
@@ -118,11 +119,8 @@ class UserState(object):
         # user NOTE: if you allow duplicates, you need to change the way the
         # gradient is computed as well.
 
-        # Edit
-        # _, idx = np.unique(self.exercise_ind, return_index=True)
-        # self.exercise_ind = self.exercise_ind[idx]
-        # self.correct = self.correct[idx]
-        # self.log_time_taken = self.log_time_taken[idx]
+        # EDIT - why would you want to do this ^^ ?
+        # Where does the gradient need to be edited?
 
 
 def get_indexer(options):
@@ -257,9 +255,9 @@ def sample_abilities_diffusion_wrapper(args):
     # make sure each student gets a different random sequence
     id = multiprocessing.current_process()._identity
     if len(id) > 0:
-        np.random.seed([id[0], int(time.time() * 1e9) % 4294967296])
+        np.random.seed([id[0], time.time() * 1e9])
     else:
-        np.random.seed([int(time.time() * 1e9) % 4294967296])
+        np.random.seed([time.time() * 1e9])
 
     num_steps = options.sampling_num_steps
 
@@ -270,17 +268,7 @@ def sample_abilities_diffusion_wrapper(args):
     # (eg, may push weights to be too large)  Investigate this
     return abilities, Eabilities, user_index
 
-        
-# def sample_abilities_diffusion(theta, state, num_steps=200,
-#                                sampling_epsilon=.5):
-#     exercise_ind = state.exercise_ind
-#     correct = state.correct
-#     log_time_taken = state.log_time_taken
 
-#     return(sample_abilities_diffusion(theta, exercise_ind, correct, log_time_taken
-#         , num_steps=num_steps, sampling_epsilon=sampling_epsilon))
-
-# EDITS
 def sample_abilities_diffusion(theta, exercise_ind, correct, log_time_taken
     , abilities_init=None, num_steps=200, sampling_epsilon=.5):
     """Sample the ability vector for this user from the posterior over user
@@ -317,12 +305,6 @@ def sample_abilities_diffusion(theta, exercise_ind, correct, log_time_taken
         3: The mean of the abilities vectors in the entire chain.
         4: The standard deviation of the abilities vectors in the entire chain.
     """
-
-    # EDITS
-    # abilities_init = state.abilities
-    # correct = state.correct
-    # log_time_taken = state.log_time_taken
-    # exercise_ind = state.exercise_ind
 
     # TODO -- this would run faster with something like an HMC sampler
     # initialize abilities using prior
