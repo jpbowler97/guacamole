@@ -127,7 +127,6 @@ def get_cmd_line_options(arguments=None):
 
     return options
 
-# EDITS
 def emit_features(user_states, theta, options, split_desc, exercise_ind_dict=None):
     """Emit a CSV data file of user, exercise, correctness, prediction, and abilities."""
     reverse_dict = {v: k for k, v in exercise_ind_dict.iteritems()}
@@ -135,17 +134,14 @@ def emit_features(user_states, theta, options, split_desc, exercise_ind_dict=Non
     for user_state in user_states:
         # initialize
         abilities = np.zeros((options.num_abilities, 1))
-        # EDITS
         correct = user_state.correct
         log_time_taken = user_state.log_time_taken
         exercise_ind = user_state.exercise_ind
         user = user_state.user
 
-        # EDIT
         for i in xrange(0, correct.size):
 
             # TODO(jace) this should probably be the marginal estimation
-            # EDITS
             _, _, abilities, _ = mirt_util.sample_abilities_diffusion(
                 theta, exercise_ind[:i], correct[:i], log_time_taken[:i]
                 , abilities_init=abilities, num_steps=200)
