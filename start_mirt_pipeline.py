@@ -10,12 +10,12 @@ questions are being answered correctly or incorrectly.
 
 Example Use:
     with a file called my_data.csv call
-    ./start_mirt_pipeline -i path/to/my_data.csv
+    ./start_mirt_pipeline.py --train -d path/to/my_data.csv
     let a1_time.json be the name of the output json file
         (Congrats! Examine that for information about item difficulty!)
 
     To run an adaptive test with your test items:
-    ./run_adaptive_test.py -i a1_time.json
+    ./run_adaptive_test.py -d a1_time.json
     This will open an interactive session where the test will ask you questions
     according to whatever will cause the model to gain the most information to
     predict your abilities.
