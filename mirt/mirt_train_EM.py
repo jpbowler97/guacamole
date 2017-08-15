@@ -103,7 +103,7 @@ def get_cmd_line_options(arguments=None):
                             "and 1.0) of the data to be used for training. "
                             "The remainder is held out for testing."))
     parser.add_option("-e", "--emit_features", action="store_true",
-                      default=True,
+                      default=False,
                       help=("Boolean flag indicating whether to output "
                             "feature and prediction data. Often used to "
                             "analyze accuracy of predictions after model "
